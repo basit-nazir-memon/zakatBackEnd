@@ -20,7 +20,8 @@ const TermSchema = new mongoose.Schema({
     amountTerms: [AmountTermsSchema],
     closureReason: { type: String, default: '' },
     startDate: { type: Date, default: Date.now },
-    endDate: { type: Date, default: null }
+    endDate: { type: Date, default: null },
+    isClosed: {type: Boolean, default: false },
 });
 
 const ExtraFASchema = new mongoose.Schema({

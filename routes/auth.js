@@ -169,9 +169,9 @@ router.post('/login', async (req, res) => {
             },
         };
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "2d" }, (err, token) => {
             if (err) throw err;
-            res.json({ token, id: user.id, role: user.role });
+            res.json({ token, id: user.id, role: user.role, avatar: user.avatar });
         });
     } catch (err) {
         console.error(err.message);
