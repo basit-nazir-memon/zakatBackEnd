@@ -46,6 +46,17 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
     try {
         const result = await uploadFile(req);
 
+        res.status(200).json({ avatar: result.secure_url });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'An error occurred while uploading the avatar' });
+    }
+});
+
+router.post('/upload-profilePic', auth, upload.single('avatar'), async (req, res) => {
+    try {
+        const result = await uploadFile(req);
+
         const user = await User.findById(req.user.id);
 
         if (!user) {
