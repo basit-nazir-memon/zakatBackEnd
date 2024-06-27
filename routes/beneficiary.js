@@ -1,6 +1,7 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+const editor = require("../middleware/editor");
 const Beneficiary = require("../models/Beneficiary");
 const { body, validationResult } = require('express-validator');
 const Account = require("../models/Account");
@@ -17,7 +18,7 @@ router.get('/beneficiaries', auth, async (req, res) => {
     }
 });
 
-router.get('/beneficiaries/:id', auth, async (req, res) => {
+router.get('/beneficiaries/:id', auth, editor , async (req, res) => {
     const { id } = req.params;
     try {
         const beneficiary = await Beneficiary.findById(id);
@@ -32,7 +33,7 @@ router.get('/beneficiaries/:id', auth, async (req, res) => {
 });
 
 
-router.post('/beneficiaries/add', auth, async (req, res) => {
+router.post('/beneficiaries/add', auth, admin, async (req, res) => {
     try {
         const beneficiaryData = req.body;
 
@@ -141,7 +142,7 @@ router.get('/monthly-expenses', auth, async (req, res) => {
     }
 });
 
-router.put('/beneficiaries/personalInfo/:id', auth, [
+router.put('/beneficiaries/personalInfo/:id', auth, admin, [
     body('name').notEmpty().withMessage('Name is required'),
     body('CNIC').optional().isString(),
     body('ContactNumber').optional().isString(),
@@ -181,7 +182,7 @@ router.put('/beneficiaries/personalInfo/:id', auth, [
 });
 
 
-router.put('/beneficiaries/familyInfo/:id', auth, [
+router.put('/beneficiaries/familyInfo/:id', auth, admin, [
     body('familyInfo.son').optional().isInt({ min: 0 }).withMessage('Number of sons must be a non-negative integer'),
     body('familyInfo.daughter').optional().isInt({ min: 0 }).withMessage('Number of daughters must be a non-negative integer'),
     body('familyInfo.adopted').optional().isInt({ min: 0 }).withMessage('Number of adopted children must be a non-negative integer')
@@ -213,7 +214,7 @@ router.put('/beneficiaries/familyInfo/:id', auth, [
 });
 
 
-router.put('/beneficiaries/additionalInfo/:id', auth, [
+router.put('/beneficiaries/additionalInfo/:id', auth, admin, [
     body('isAlive').notEmpty().withMessage('Alive Status is required'),
     body('deathDate').optional(),
     body('profession').notEmpty().withMessage('Profession is required'),
@@ -260,7 +261,7 @@ router.put('/beneficiaries/additionalInfo/:id', auth, [
     }
 });
 
-router.post('/beneficiaries/extraFA/:id', auth, async (req, res) => {
+router.post('/beneficiaries/extraFA/:id', auth, admin, async (req, res) => {
     try {
         const beneficiaryId = req.params.id;
         const { reason, amount, date, picProof } = req.body.extraFA;
@@ -307,7 +308,7 @@ router.post('/beneficiaries/extraFA/:id', auth, async (req, res) => {
 });
 
 
-router.post('/beneficiaries/amountterm/add/:id', auth, async (req, res) => {
+router.post('/beneficiaries/amountterm/add/:id', auth, admin, async (req, res) => {
     const { id } = req.params;
     const { reason, amountChange } = req.body.amountTerms;
 
@@ -345,7 +346,7 @@ router.post('/beneficiaries/amountterm/add/:id', auth, async (req, res) => {
     }
 });
 
-router.post('/beneficiaries/term/close/:id', auth, async (req, res) => {
+router.post('/beneficiaries/term/close/:id', auth, admin, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -377,7 +378,7 @@ router.post('/beneficiaries/term/close/:id', auth, async (req, res) => {
     }
 });
 
-router.post('/beneficiaries/term/add/:id', auth, async (req, res) => {
+router.post('/beneficiaries/term/add/:id', auth, admin, async (req, res) => {
     const { id } = req.params;
     const { status, type, amountTerms, closureReason, startDate, endDate } = req.body.Term;
 

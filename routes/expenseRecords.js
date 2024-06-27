@@ -2,7 +2,8 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const Account = require("../models/Account");
 const ExpenseRecord = require("../models/ExpenseRecord");
-const Beneficiary = require("../models/Beneficiary")
+const Beneficiary = require("../models/Beneficiary");
+const editor = require("../middleware/editor");
 const router = express.Router();
 
 router.get('/summary', auth, async (req, res) => {
@@ -65,7 +66,6 @@ router.get('/summary', auth, async (req, res) => {
         //  Ensure both series have 12 data points (months)
         while (chartSeries[0].data.length < 12) chartSeries[0].data.push(0);
         while (chartSeries[1].data.length < 12) chartSeries[1].data.push(0);
- 
 
         const beneficiaries = await Beneficiary.find();
     
@@ -135,7 +135,7 @@ router.get('/expenses-summary', auth, async (req, res) => {
 });
 
 
-router.get('/expense-history/:year/:month', async (req, res) => {
+router.get('/expense-history/:year/:month', auth, editor, async (req, res) => {
     try {
         const { year, month } = req.params;
 

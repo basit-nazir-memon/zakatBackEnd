@@ -63,7 +63,7 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
 });
 
 
-router.post('/register', async (req, res) => {
+router.post('/register', auth, admin, async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body;
     try {
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -171,7 +171,7 @@ router.post('/login', async (req, res) => {
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "2d" }, (err, token) => {
             if (err) throw err;
-            res.json({ token, id: user.id, role: user.role, avatar: user.avatar, name: `${user.firstName} ${user.lastName}`, email: user.email });
+            res.json({ token, id: user.id, role: user.role, avatar: user.avatar, firstName: user.firstName,  lastName: user.lastName , email: user.email });
         });
     } catch (err) {
         console.error(err.message);

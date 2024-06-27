@@ -5,6 +5,7 @@ const ExtraExpenditure = require('../models/ExtraExpense');
 const addExpenseEntry = require('../middleware/addRecord');
 const Account = require('../models/Account');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 const router = express.Router();
 
 // Define the validation schema for Extra Expenditure
@@ -25,7 +26,7 @@ router.get('/extraexpenditures', auth, async (req, res) => {
 });
 
 // Route to add a new extra expenditure
-router.post('/extraexpenditures/add', auth, async (req, res) => {
+router.post('/extraexpenditures/add', auth, admin, async (req, res) => {
     try {
         const result = extraExpenditureSchema.safeParse(req.body);
         

@@ -18,7 +18,7 @@ const donorSchema = z.object({
 });
 
 
-router.get('/donors', async (req, res) => {
+router.get('/donors', auth, async (req, res) => {
     try {
         const donors = await Donor.find();
         res.json(donors);
@@ -30,7 +30,7 @@ router.get('/donors', async (req, res) => {
 
 
 // Route to add a new donor
-router.post('/donors/add', async (req, res) => {
+router.post('/donors/add', auth, admin, async (req, res) => {
     try {
         const result = donorSchema.safeParse(req.body);
         

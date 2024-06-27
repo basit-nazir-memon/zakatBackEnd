@@ -2,6 +2,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const router = express.Router();
 const User = require("../models/User"); 
+const admin = require("../middleware/admin");
 
 // // Get my details
 // router.get("/user/me", auth, async (req, res) => {
@@ -82,7 +83,7 @@ const User = require("../models/User");
 
 
 // Get all users as JSON
-router.get("/users", auth, async (req, res) => {
+router.get("/users", auth, admin, async (req, res) => {
   try {
     const users = await User.find();
     

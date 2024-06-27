@@ -1,10 +1,12 @@
 const express = require('express');
 const DemandList = require('../models/DemandList');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const router = express.Router();
 
 
-router.get('/demand-lists', async (req, res) => {
+router.get('/demand-lists', auth, async (req, res) => {
     try {
         const demandLists = await DemandList.find()
             .populate('PersonId', 'firstName lastName')
@@ -17,7 +19,7 @@ router.get('/demand-lists', async (req, res) => {
     }
 });
 
-router.post('/demand-lists', async (req, res) => {
+router.post('/demand-lists', auth, admin, async (req, res) => {
     try {
 
         const PersonId = "6673bdcc8d6a5904a5eb6482";

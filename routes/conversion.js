@@ -2,11 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const ConversionHistory = require('../models/Conversion');
 const Account = require('../models/Account');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const router = express.Router();
 
 // Route to get all conversion history
-router.get('/conversion-history', async (req, res) => {
+router.get('/conversion-history', auth, async (req, res) => {
     try {
         const conversions = await ConversionHistory.find();
         res.status(200).json(conversions);
@@ -17,7 +19,7 @@ router.get('/conversion-history', async (req, res) => {
 });
 
 // Route to add a new conversion
-router.post('/conversion-history', async (req, res) => {
+router.post('/conversion-history', auth, admin, async (req, res) => {
 
     let { amount, currency, type, depositor, convert, reason } = req.body;
 
