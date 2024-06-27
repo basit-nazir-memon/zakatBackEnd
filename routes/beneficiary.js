@@ -3,6 +3,8 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const Beneficiary = require("../models/Beneficiary");
 const { body, validationResult } = require('express-validator');
+const Account = require("../models/Account");
+const addExpenseEntry = require("../middleware/addRecord");
 const router = express.Router();
 
 router.get('/beneficiaries', auth, async (req, res) => {

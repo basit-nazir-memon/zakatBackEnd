@@ -1,90 +1,88 @@
 const express = require("express");
 const auth = require("../middleware/auth");
-const admin = require("../middleware/admin");
 const router = express.Router();
-const User = require("../models/User"); // Adjust the path as needed
+const User = require("../models/User"); 
 
+// // Get my details
+// router.get("/user/me", auth, async (req, res) => {
+//   console.log(req.user.id);
 
-// Get my details
-router.get("/user/me", auth, async (req, res) => {
-  console.log(req.user.id);
+//   try {
 
-  try {
+//     const user = await User.findById(req.user.id);
 
-    const user = await User.findById(req.user.id);
+//     if (!user) {
+//       return res.status(404).json({msg: "No User"});
+//     }
 
-    if (!user) {
-      return res.status(404).json({msg: "No User"});
-    }
+//     res.json(user);
+//   } catch (error) {
+//     res.status(500).json(error);
+//   }
+// });
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
+// router.post("/user/:id", async (req, res) => {
+//   try {
+//     const user = new User(req.body);
+//     await user.save();
+//     res.status(201).send(user);
+//   } catch (error) {
+//     res.status(400).send(error);
+//   }
+// });
 
-router.post("/user/:id", async (req, res) => {
-  try {
-    const user = new User(req.body);
-    await user.save();
-    res.status(201).send(user);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-});
+// // Update user information
+// router.patch("/user/:id", async (req, res) => {
+//   const { id } = req.params;
+//   const updates = req.body;
 
-// Update user information
-router.patch("/user/:id", async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
+//   try {
+//     const user = await User.findByIdAndUpdate(id, updates, { new: true });
 
-  try {
-    const user = await User.findByIdAndUpdate(id, updates, { new: true });
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+//     res.status(200).json(user);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
 
-    res.status(200).json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+// // Delete user by ID
+// router.delete("/users/:id", auth, admin, async (req, res) => {
+//   try {
+//     const user = await User.findByIdAndDelete(req.params.id);
 
-// Delete user by ID
-router.delete("/users/:id", auth, admin, async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
+//     if (!user) {
+//       return res.status(404).send();
+//     }
 
-    if (!user) {
-      return res.status(404).send();
-    }
+//     res.send(user);
+//   } catch (error) {
+//     res.status(500).send(error);
+//   }
+// });
 
-    res.send(user);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+// // Get user by ID
+// router.get("/user/:id", async (req, res) => {
+//   try {
+//     const user = await User.findById(req.params.id);
 
-// Get user by ID
-router.get("/user/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).send();
-    }
-    console.log("in find user route");
-    res.json(user);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+//     if (!user) {
+//       return res.status(404).send();
+//     }
+//     console.log("in find user route");
+//     res.json(user);
+//   } catch (error) {
+//     res.status(500).send(error);
+//   }
+// });
 
 
 // Get all users as JSON
-router.get("/users", async (req, res) => {
+router.get("/users", auth, async (req, res) => {
   try {
     const users = await User.find();
     
@@ -97,6 +95,47 @@ router.get("/users", async (req, res) => {
   } catch (error) {
     res.status(500).send(error);
   }
+});
+
+
+router.get('/profile', auth, async (req, res) => {
+  try {
+      const user = await User.findById(req.user.id).select('-password');
+      res.json(user);
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
+});
+
+router.put('/profile', auth, async (req, res) => {
+  const { firstName, lastName, email, phone, city, country, gender } = req.body;
+
+  if (firstName == "" || lastName == "" || email == "" || country == "" || city == "" || gender == ""){
+      return res.status(400).json({ msg: 'Fill All Fields' });
+  }
+
+  try {
+      let user = await User.findById(req.user.id);
+
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.email = email || user.email;
+      user.gender = gender || user.gender;
+      user.address = {
+          city: city,
+          country: country
+      }
+      user.phone = phone || user.phone
+
+      await user.save();
+
+      res.status(200).json({msg: 'Updated User'});
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).json({err: 'Server Error'});
+  }
+
 });
 
 module.exports = router;

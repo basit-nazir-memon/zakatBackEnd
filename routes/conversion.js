@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const ConversionHistory = require('../models/Conversion');
+const Account = require('../models/Account');
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.post('/conversion-history', async (req, res) => {
         if (!convert.date || convert.currency < 0 || !convert.rate){
             return res.status(400).json({error: "Fill all the detail of conversion"});
         }
-        if (currency == convet.currency) {
+        if (currency == convert.currency) {
             return res.status(400).json({ error: 'Both Currencies Cannot be Same' });
         }
     }else {
