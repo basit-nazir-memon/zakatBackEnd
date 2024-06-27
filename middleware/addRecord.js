@@ -9,19 +9,25 @@ async function addExpenseEntry(year, month, amount, details) {
             record = new ExpenseRecord({ years: [] });
         }
 
+
         // Find the year entry or create it if it doesn't exist
         let yearEntry = record.years.find(y => y.year === year);
+
         if (!yearEntry) {
             yearEntry = { year, months: {} };
             record.years.push(yearEntry);
         }
 
+
         // Add or update the month entry
         if (!yearEntry.months[month]) {
-            yearEntry.months[month] = { amount: 0, details: [] };
+            record.years.find(y => y.year === year).months[month] = { amount: 0, details: [] };
+            record.years.find(y => y.year === year).months[month].amount += amount;
+            record.years.find(y => y.year === year).months[month].details.push({ amount, details });
+        }else{
+            yearEntry.months[month].amount += amount;
+            yearEntry.months[month].details.push({ amount, details });
         }
-        yearEntry.months[month].amount += amount;
-        yearEntry.months[month].details.push({ amount, details });
 
         // Save the record
         await record.save();

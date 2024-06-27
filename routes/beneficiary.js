@@ -40,9 +40,11 @@ router.post('/beneficiaries/add', auth, admin, async (req, res) => {
         // Create a new Beneficiary document
         const newBeneficiary = new Beneficiary(beneficiaryData);
 
-        if (newBeneficiary.Term && newBeneficiary.Term[0]?.type == "Occasionally"){
+        const checkOccasionallyCondition = newBeneficiary.Term && newBeneficiary.Term[0]?.type == "Occasionally";
+
+        if (checkOccasionallyCondition){
             newBeneficiary.Term = [];
-            newBeneficiary.currentTerm = -1;
+            newBeneficiary.currentTerm = 0;
 
             if(newBeneficiary.extraFA[0]?.amount <= 0){
                 return res.status(500).json({ msg: 'Financial Assistance Amount Should be greater than zero', error: "Error" });
@@ -74,11 +76,11 @@ router.post('/beneficiaries/add', auth, admin, async (req, res) => {
         // Save the document to the database
         await newBeneficiary.save();
 
-        if (newBeneficiary.Term && newBeneficiary.Term[0]?.type == "Occasionally"){
+        if (checkOccasionallyCondition){
             // Removing the Amount From Account
             await account.logTransaction( -1 * newBeneficiary.extraFA[0].amount, "PKR", "Beneficiary Extra Financial Assistance", `An Amount of ${newBeneficiary.extraFA[0].amount}PKR has been deducted for the extra FA entry on ${(new Date()).toISOString()} for the beneficiary named ${newBeneficiary.name} due to the reason: ${newBeneficiary.extraFA[0].reason}`);
             
-            const now = new Date();
+            const now = new Date(newBeneficiary.extraFA[0].date);
             const currentYear = now.getFullYear();
             const currentMonth = now.toLocaleString('default', { month: 'short' });
             addExpenseEntry(currentYear, currentMonth, newBeneficiary.extraFA[0].amount, `An Amount of ${newBeneficiary.extraFA[0].amount}PKR has been deducted for the extra FA entry on ${(new Date()).toISOString()} for the beneficiary named ${newBeneficiary.name} due to the reason: ${newBeneficiary.extraFA[0].reason}`);
