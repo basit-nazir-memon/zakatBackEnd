@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/beneficiaries', auth, async (req, res) => {
     try {
         const beneficiaries = await Beneficiary.find({}, '_id name CNIC gender isAlive City Area');
+        beneficiaries.reverse();
         res.json(beneficiaries);
     } catch (error) {
         console.error('Error fetching beneficiaries:', error);
@@ -37,7 +38,6 @@ router.post('/beneficiaries/add', auth, admin, async (req, res) => {
     try {
         const beneficiaryData = req.body;
 
-        // Create a new Beneficiary document
         const newBeneficiary = new Beneficiary(beneficiaryData);
 
         const checkOccasionallyCondition = newBeneficiary.Term && newBeneficiary.Term[0]?.type == "Occasionally";
@@ -84,6 +84,26 @@ router.post('/beneficiaries/add', auth, admin, async (req, res) => {
             const currentYear = now.getFullYear();
             const currentMonth = now.toLocaleString('default', { month: 'short' });
             addExpenseEntry(currentYear, currentMonth, newBeneficiary.extraFA[0].amount, `An Amount of ${newBeneficiary.extraFA[0].amount}PKR has been deducted for the extra FA entry on ${(new Date()).toISOString()} for the beneficiary named ${newBeneficiary.name} due to the reason: ${newBeneficiary.extraFA[0].reason}`);
+        }else{
+            const monthlyAmount = newBeneficiary.Term[0]?.amountTerms[0].amountChange;
+            const reason = newBeneficiary.Term[0]?.amountTerms[0].reason;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.toLocaleString('default', { month: 'short' });
+
+            await account.logTransaction(
+                -1 * monthlyAmount,
+                "PKR",
+                "Beneficiary Expense",
+                `An Amount of ${monthlyAmount}PKR has been deducted for the Beneficiary Expense on ${(new Date()).toISOString()} for the beneficiary named ${newBeneficiary.name} against Term Number: '0' for the reason: ${reason}`
+            );
+
+            await addExpenseEntry(
+                currentYear,
+                currentMonth,
+                monthlyAmount,
+                `An Amount of ${monthlyAmount}PKR has been deducted for the Beneficiary Expense on ${(new Date()).toISOString()} for the beneficiary named ${newBeneficiary.name} against Term Number: '0' for the reason: ${reason}`
+            );
         }
 
         res.status(201).json({ msg: 'Beneficiary added successfully!', beneficiary: newBeneficiary });
@@ -318,6 +338,12 @@ router.post('/beneficiaries/amountterm/add/:id', auth, admin, async (req, res) =
         return res.status(400).json({ error: 'Reason and amountChange are required' });
     }
 
+    const account = await Account.findOne();
+
+    if (!account) {
+        return res.status(404).send({ error: 'Account not found' });
+    }
+
     try {
         const beneficiary = await Beneficiary.findById(id);
 
@@ -340,6 +366,24 @@ router.post('/beneficiaries/amountterm/add/:id', auth, admin, async (req, res) =
         beneficiary.Term[currentTermIndex].amountTerms.push(newAmountTerm);
 
         await beneficiary.save();
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.toLocaleString('default', { month: 'short' });
+
+        await account.logTransaction(
+            -1 * amountChange,
+            "PKR",
+            "Beneficiary New Amount Term Addition",
+            `An Amount of ${amountChange}PKR has been ${amountChange > 0 ? 'Deducted' : 'Added'} for the beneficiary Expense Term due to New Amount Term Addition on ${(new Date()).toISOString()} for the beneficiary named ${beneficiary.name} against Term Number: ${currentTermIndex} for the reason: ${reason}`
+        );
+
+        await addExpenseEntry(
+            currentYear,
+            currentMonth,
+            amountChange,
+            `An Amount of ${amountChange}PKR has been ${amountChange > 0 ? 'Deducted' : 'Added'} for the beneficiary Expense Term due to New Amount Term Addition on ${(new Date()).toISOString()} for the beneficiary named ${beneficiary.name} against Term Number: ${currentTermIndex} for the reason: ${reason}`
+        );
 
         res.status(200).json({ msg: 'Amount term added successfully'});
     } catch (error) {
@@ -388,6 +432,12 @@ router.post('/beneficiaries/term/add/:id', auth, admin, async (req, res) => {
         return res.status(400).json({ error: 'Status and type are required' });
     }
 
+    const account = await Account.findOne();
+
+    if (!account) {
+        return res.status(404).send({ error: 'Account not found' });
+    }
+
     try {
         const beneficiary = await Beneficiary.findById(id);
 
@@ -408,6 +458,26 @@ router.post('/beneficiaries/term/add/:id', auth, admin, async (req, res) => {
         beneficiary.currentTerm = beneficiary.Term.length;
 
         await beneficiary.save();
+
+        const monthlyAmount = newTerm?.amountTerms[0].amountChange;
+        const reason = newTerm?.amountTerms[0].reason;
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.toLocaleString('default', { month: 'short' });
+
+        await account.logTransaction(
+            -1 * monthlyAmount,
+            "PKR",
+            "Beneficiary New Term Addition",
+            `An Amount of ${monthlyAmount}PKR has been deducted for the Beneficiary Expense on Addition of New Term on ${(new Date()).toISOString()} for the beneficiary named ${beneficiary.name} against Term Number: ${beneficiary.currentTerm} for the reason: ${reason}`
+        );
+
+        await addExpenseEntry(
+            currentYear,
+            currentMonth,
+            monthlyAmount,
+            `An Amount of ${monthlyAmount}PKR has been deducted for the Beneficiary Expense on Addition of New Term on ${(new Date()).toISOString()} for the beneficiary named ${beneficiary.name} against Term Number: ${beneficiary.currentTerm} for the reason: ${reason}`
+        );
 
         res.status(200).json({ msg: 'Term added successfully', term: newTerm });
     } catch (error) {

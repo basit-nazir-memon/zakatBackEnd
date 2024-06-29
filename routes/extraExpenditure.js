@@ -18,6 +18,7 @@ const extraExpenditureSchema = z.object({
 router.get('/extraexpenditures', auth, async (req, res) => {
     try {
         const expenditures = await ExtraExpenditure.find();
+        expenditures.reverse();
         res.json(expenditures);
     } catch (error) {
         console.error('Error fetching extra expenditures:', error);

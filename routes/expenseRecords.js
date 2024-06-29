@@ -127,6 +127,8 @@ router.get('/expenses-summary', auth, async (req, res) => {
             });
         });
 
+        expenseSummary.reverse();
+
         res.json(expenseSummary);
     } catch (error) {
         console.error('Error fetching expense summaries:', error);

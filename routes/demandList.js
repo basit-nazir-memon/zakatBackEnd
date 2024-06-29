@@ -13,6 +13,7 @@ router.get('/demand-lists', auth, async (req, res) => {
             .populate('viewers', 'firstName lastName')
             .populate('Comments.originator', 'firstName lastName avatar')
             .populate('Comments.reply.replier', 'firstName lastName avatar');
+        demandLists.reverse();
         res.json(demandLists);
     } catch (err) {
         res.status(500).json({ error: 'An error occurred while fetching demand lists.' });

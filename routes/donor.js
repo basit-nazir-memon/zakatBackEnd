@@ -21,6 +21,7 @@ const donorSchema = z.object({
 router.get('/donors', auth, async (req, res) => {
     try {
         const donors = await Donor.find();
+        donors.reverse();
         res.json(donors);
     } catch (error) {
         console.error('Error fetching donors:', error);

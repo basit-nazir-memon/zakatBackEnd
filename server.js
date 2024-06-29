@@ -9,7 +9,9 @@ const extraexpendituresRoute = require('./routes/extraExpenditure');
 const conversionRoute = require('./routes/conversion');
 const demandListRoute = require('./routes/demandList');
 const expensesRecordsRoute = require('./routes/expenseRecords');
+const cron = require('node-cron');
 const Account = require('./models/Account');
+const scheduleJob = require('./middleware/scheduleJob')
 
 
 const cors = require('cors');
@@ -18,7 +20,7 @@ require('dotenv').config()
 
 const app = express()
 
-mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.t1ompdc.mongodb.net/zakatWebsite`, { useNewUrlParser: true })
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.t1ompdc.mongodb.net/zakatTest`, { useNewUrlParser: true })
 
 const db = mongoose.connection;
 
@@ -55,6 +57,10 @@ const initializeExpenseRecords = async () => {
     }
 };
 
+cron.schedule('0 0 1 * *', () => {
+    scheduleJob();
+});
+
 app.use('/', authRoute);
 app.use('/', userProfile);
 app.use('/', beneficiaryRoute);
@@ -63,12 +69,5 @@ app.use('/', extraexpendituresRoute);
 app.use('/', conversionRoute);
 app.use('/', demandListRoute);
 app.use('/', expensesRecordsRoute);
-
-// app.use('/admin', adminRoute);
-// app.use('/posts', blogPostRoute);
-// app.use('/search', searchRoute);
-// app.use('/works', worksRoute);
-// app.use('/orders', orderRoute);
-// app.use('/profile', userProfile);
 
 app.listen(process.env.PORT, () => console.log(`App listening on port ${process.env.PORT}!`))

@@ -89,6 +89,8 @@ router.get("/users", auth, admin, async (req, res) => {
       return userData;
     });
 
+    usersWithoutPassword.reverse();
+
     res.send(usersWithoutPassword);
   } catch (error) {
     res.status(500).send(error);

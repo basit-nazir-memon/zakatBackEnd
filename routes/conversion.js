@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/conversion-history', auth, async (req, res) => {
     try {
         const conversions = await ConversionHistory.find();
+        conversions.reverse();
         res.status(200).json(conversions);
     } catch (error) {
         console.error('Error fetching conversion history:', error);
