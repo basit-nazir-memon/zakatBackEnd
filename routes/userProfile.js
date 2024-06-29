@@ -4,23 +4,20 @@ const router = express.Router();
 const User = require("../models/User"); 
 const admin = require("../middleware/admin");
 
-// // Get my details
-// router.get("/user/me", auth, async (req, res) => {
-//   console.log(req.user.id);
+// Get my details
+router.get("/user/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
 
-//   try {
+    if (!user) {
+      return res.status(404).json({msg: "No User"});
+    }
 
-//     const user = await User.findById(req.user.id);
-
-//     if (!user) {
-//       return res.status(404).json({msg: "No User"});
-//     }
-
-//     res.json(user);
-//   } catch (error) {
-//     res.status(500).json(error);
-//   }
-// });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
 
 // router.post("/user/:id", async (req, res) => {
 //   try {

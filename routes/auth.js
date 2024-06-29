@@ -42,7 +42,7 @@ async function uploadFile(req) {
     return result;
 }
 
-router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', auth, admin, upload.single('avatar'), async (req, res) => {
     try {
         const result = await uploadFile(req);
 
