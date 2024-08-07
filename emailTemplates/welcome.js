@@ -230,3 +230,6 @@ const getWelcomeEmail = (firstName, lastName, redirectUrl, password) => {
     
     `
 }
+
+
+module.exports = getWelcomeEmail;

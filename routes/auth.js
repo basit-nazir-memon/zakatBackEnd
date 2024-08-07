@@ -16,6 +16,7 @@ const upload = multer({
 require('dotenv').config();
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
+const getWelcomeEmail = require('../emailTemplates/welcome');
 
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -123,6 +124,8 @@ router.post('/register', auth, admin, async (req, res) => {
         await transporter.sendMail(mailOptions);
 
         await user.save();
+
+        res.status(200).send('Success');
 
     } catch (err) {
         console.error(err.message);

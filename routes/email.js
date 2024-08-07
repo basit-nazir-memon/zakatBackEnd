@@ -7,6 +7,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const getResetEmail = require('../emailTemplates/resetPassword');
+const passwordChange = require('../emailTemplates/passwordChangeConfirmation');
 
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -100,8 +101,8 @@ router.post('/reset-password/:token', async (req, res) => {
         const mailOptions = {
             to: user.email,
             from: process.env.EMAIL_USER,
-            subject: 'Password Has Been Updated',
-            text: `Dear User, your password has been updated. If you did not request this, please reset your password now.\n`
+            subject: 'Password Changed',
+            html: passwordChange(user.firstName, user.lastName, `${process.env.FRONT_END_URL}/auth/reset-password`)
         };
 
         await transporter.sendMail(mailOptions);
