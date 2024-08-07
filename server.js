@@ -9,10 +9,10 @@ const extraexpendituresRoute = require('./routes/extraExpenditure');
 const conversionRoute = require('./routes/conversion');
 const demandListRoute = require('./routes/demandList');
 const expensesRecordsRoute = require('./routes/expenseRecords');
+const emailRoute = require('./routes/email');
 const cron = require('node-cron');
 const Account = require('./models/Account');
 const scheduleJob = require('./middleware/scheduleJob')
-
 
 const cors = require('cors');
 const ExpenseRecord = require('./models/ExpenseRecord');
@@ -69,5 +69,7 @@ app.use('/', extraexpendituresRoute);
 app.use('/', conversionRoute);
 app.use('/', demandListRoute);
 app.use('/', expensesRecordsRoute);
+app.use('/', emailRoute);
+
 
 app.listen(process.env.PORT, () => console.log(`App listening on port ${process.env.PORT}!`))

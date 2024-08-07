@@ -16,6 +16,8 @@ const userSchema = new Schema({
         city: { type: String },
         country: { type: String }
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
 });
 
 const User = mongoose.model("User", userSchema);
