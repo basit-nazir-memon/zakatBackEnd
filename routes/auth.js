@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const admin = require('../middleware/admin');
@@ -16,6 +17,13 @@ require('dotenv').config();
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -104,6 +112,15 @@ router.post('/register', auth, admin, async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
+
+        const mailOptions = {
+            to: user.email,
+            from: process.env.EMAIL_USER,
+            subject: `Welcome to Imdaad Foundation Community`,
+            html: getWelcomeEmail(user.firstName, user.lastName, process.env.FRONT_END_URL, password)
+        };
+
+        await transporter.sendMail(mailOptions);
 
         await user.save();
 

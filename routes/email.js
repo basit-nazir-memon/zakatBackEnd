@@ -6,6 +6,7 @@ const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const getResetEmail = require('../emailTemplates/resetPassword');
 
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -45,10 +46,7 @@ router.post('/reset-password', [
         to: user.email,
         from: process.env.EMAIL_USER,
         subject: 'Password Reset',
-        text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-                Please click on the following link, or paste this into your browser to complete the process:\n\n
-                ${resetUrl}\n\n
-                If you did not request this, please ignore this email and your password will remain unchanged.\n`
+        html: getResetEmail(resetUrl, user.firstName, user.lastName)
         };
 
         await transporter.sendMail(mailOptions);
