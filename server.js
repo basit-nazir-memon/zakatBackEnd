@@ -13,7 +13,6 @@ const emailRoute = require('./routes/email');
 const cron = require('node-cron');
 const Account = require('./models/Account');
 const scheduleJob = require('./middleware/scheduleJob')
-const axios = require('axios');
 const cors = require('cors');
 const ExpenseRecord = require('./models/ExpenseRecord');
 require('dotenv').config()
@@ -59,11 +58,16 @@ const initializeExpenseRecords = async () => {
 
 const visitWebsite = async () => {
     try {
-        const response = await axios.get('https://zakatbackend.onrender.com/status');
+        const response = await fetch('https://zakatbackend.onrender.com/status');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
     } catch (error) {
         console.error(`Error visiting the site: ${error.message}`);
     }
 };
+
 
 // Schedule the job to run every minute
 cron.schedule('*/1 * * * *', visitWebsite);
