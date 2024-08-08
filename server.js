@@ -13,7 +13,7 @@ const emailRoute = require('./routes/email');
 const cron = require('node-cron');
 const Account = require('./models/Account');
 const scheduleJob = require('./middleware/scheduleJob')
-
+const axios = require('axios');
 const cors = require('cors');
 const ExpenseRecord = require('./models/ExpenseRecord');
 require('dotenv').config()
@@ -57,6 +57,17 @@ const initializeExpenseRecords = async () => {
     }
 };
 
+const visitWebsite = async () => {
+    try {
+        const response = await axios.get('https://zakatbackend.onrender.com/status');
+    } catch (error) {
+        console.error(`Error visiting the site: ${error.message}`);
+    }
+};
+
+// Schedule the job to run every minute
+cron.schedule('*/1 * * * *', visitWebsite);
+
 cron.schedule('0 0 1 * *', () => {
     scheduleJob();
 });
@@ -70,6 +81,11 @@ app.use('/', conversionRoute);
 app.use('/', demandListRoute);
 app.use('/', expensesRecordsRoute);
 app.use('/', emailRoute);
-
+app.get('/status', (req, res)=> {
+    res.status(200).json({
+        status: 'Up',
+        frontend: process.env.FRONT_END_URL
+    })
+})
 
 app.listen(process.env.PORT, () => console.log(`App listening on port ${process.env.PORT}!`))
