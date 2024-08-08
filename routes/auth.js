@@ -17,6 +17,7 @@ require('dotenv').config();
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const getWelcomeEmail = require('../emailTemplates/welcome');
+const passwordChange = require('../emailTemplates/passwordChangeConfirmation');
 
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -161,6 +162,15 @@ router.post('/update-password', auth, async (req, res) => {
         user.password = await bcrypt.hash(password, salt);
 
         await user.save();
+
+        const mailOptions = {
+            to: user.email,
+            from: process.env.EMAIL_USER,
+            subject: 'Password Changed',
+            html: passwordChange(user.firstName, user.lastName, `${process.env.FRONT_END_URL}/auth/reset-password`)
+        };
+
+        await transporter.sendMail(mailOptions);
         
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (err) {

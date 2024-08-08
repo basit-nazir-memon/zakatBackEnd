@@ -3,6 +3,18 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 const User = require("../models/User"); 
 const admin = require("../middleware/admin");
+const nodemailer = require('nodemailer');
+const getAccountBlockedHTML = require("../emailTemplates/accountBlocked");
+const getAccountUnblockedHTML = require("../emailTemplates/accountUnblocked");
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+  },
+});
+
 
 // Get my details
 router.get("/user/me", auth, async (req, res) => {
@@ -136,6 +148,48 @@ router.put('/profile', auth, async (req, res) => {
       res.status(500).json({err: 'Server Error'});
   }
 
+});
+
+
+router.put('/toggle-block/:id', auth, admin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        user.blocked = !(user.blocked);
+
+        await user.save();
+
+        if (user.blocked){
+          const mailOptions = {
+              to: user.email,
+              from: process.env.EMAIL_USER,
+              subject: 'Account Has Been Blocked',
+              html: getAccountBlockedHTML(user.firstName, user.lastName, 'nazirmemon66@yahoo.com')
+          };
+
+          await transporter.sendMail(mailOptions);
+
+          res.json({ msg: 'User blocked successfully' });
+        }else{
+
+          const mailOptions = {
+              to: user.email,
+              from: process.env.EMAIL_USER,
+              subject: 'Your Account Has been Unblocked',
+              html: getAccountUnblockedHTML(user.firstName, user.lastName, 'nazirmemon66@yahoo.com')
+          };
+
+          await transporter.sendMail(mailOptions);
+
+          res.json({ msg: 'User unblocked successfully' });
+        }
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 });
 
 module.exports = router;
