@@ -19,7 +19,7 @@ require('dotenv').config()
 
 const app = express()
 
-mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.t1ompdc.mongodb.net/zakatWebsite`, { useNewUrlParser: true })
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.t1ompdc.mongodb.net/${process.env.DATABASE_NAME}`, { useNewUrlParser: true })
 
 const db = mongoose.connection;
 
@@ -72,9 +72,9 @@ const visitWebsite = async () => {
 // Schedule the job to run every minute
 cron.schedule('*/1 * * * *', visitWebsite);
 
-cron.schedule('0 0 1 * *', () => {
-    scheduleJob();
-});
+// cron.schedule('0 0 1 * *', () => {
+//     scheduleJob();
+// });
 
 app.use('/', authRoute);
 app.use('/', userProfile);
@@ -91,5 +91,4 @@ app.get('/status', (req, res)=> {
         frontend: process.env.FRONT_END_URL
     })
 })
-
 app.listen(process.env.PORT, () => console.log(`App listening on port ${process.env.PORT}!`))

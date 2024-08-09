@@ -126,7 +126,9 @@ router.get('/monthly-expenses', auth, async (req, res) => {
                     contact: beneficiary.ContactNumber,
                     city: beneficiary.City,
                     area: beneficiary.Area,
-                    monthlyExpense: 0
+                    expense: 0,
+                    type: 'None',
+                    isPaid: false
                 };
             }
 
@@ -140,11 +142,36 @@ router.get('/monthly-expenses', auth, async (req, res) => {
                     contact: beneficiary.ContactNumber,
                     city: beneficiary.City,
                     area: beneficiary.Area,
-                    monthlyExpense: 0
+                    expense: 0,
+                    type: 'None',
+                    isPaid: false
                 };
             }
 
-            const monthlyExpense = currentTerm.amountTerms.reduce((sum, term) => sum + term.amountChange, 0);
+            const Expense = currentTerm.amountTerms.reduce((sum, term) => sum + term.amountChange, 0);
+
+            const Type = currentTerm.type;
+
+            // Get current date information
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+
+            let isPaid = false;
+
+             // Check payment based on term type
+            if (Type === 'Monthly') {
+                // Check if payment has been made this month
+                isPaid = currentTerm.paymentHistory.some(payment => {
+                    const paymentDate = new Date(payment.date);
+                    return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+                });
+            } else if (Type === 'Yearly') {
+                // Check if payment has been made this year
+                isPaid = currentTerm.paymentHistory.some(payment => {
+                    const paymentDate = new Date(payment.date);
+                    return paymentDate.getFullYear() === currentYear;
+                });
+            }
 
             return {
                 id: beneficiary._id,
@@ -153,7 +180,9 @@ router.get('/monthly-expenses', auth, async (req, res) => {
                 contact: beneficiary.ContactNumber,
                 city: beneficiary.City,
                 area: beneficiary.Area,
-                monthlyExpense
+                expense: Expense,
+                type: Type,
+                isPaid: isPaid
             };
         });
 
@@ -485,5 +514,88 @@ router.post('/beneficiaries/term/add/:id', auth, admin, async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+router.post('/beneficiaries/pay', auth, admin, async (req, res) => {
+    const { beneficiaryId } = req.body;
+
+    try {
+        const beneficiary = await Beneficiary.findById(beneficiaryId);
+
+        if (!beneficiary) {
+            console.log('No beneficiary found');
+            return res.status(404).json({ error: "No beneficiary found" });
+        }
+
+        const account = await Account.findOne();
+
+        if (!account) {
+            console.log('Account not found');
+            return res.status(404).json({ error: "Account not found" });
+        }
+
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+        const currentTerm = beneficiary.currentTerm - 1;
+
+        if (beneficiary.isAlive && currentTerm >= 0 && beneficiary.Term[currentTerm] && !beneficiary.Term[currentTerm].isClosed) {
+            const term = beneficiary.Term[currentTerm];
+            const monthlyAmount = term.amountTerms.reduce((sum, term) => sum + term.amountChange, 0);
+
+            let isPaid = false;
+
+            if (term.type === "Monthly") {
+                isPaid = term.paymentHistory.some(payment => {
+                    const paymentDate = new Date(payment.date);
+                    return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+                });
+            } else if (term.type === "Yearly") {
+                isPaid = term.paymentHistory.some(payment => {
+                    const paymentDate = new Date(payment.date);
+                    return paymentDate.getFullYear() === currentYear;
+                });
+            }
+
+            if (isPaid) {
+                console.log('Payment for this period has already been made');
+                return res.status(400).json({ error: "Payment for this period has already been made" });
+            }
+
+            // If not paid, proceed with the payment
+            await account.logTransaction(
+                -1 * monthlyAmount,
+                "PKR",
+                "Beneficiary Expense",
+                `An amount of ${monthlyAmount} PKR has been deducted by System for the Beneficiary Expense on ${today} for the beneficiary named ${beneficiary.name} against Term Number: '${currentTerm + 1}'`
+            );
+
+            await addExpenseEntry(
+                currentYear,
+                today.toLocaleString('default', { month: 'short' }),
+                monthlyAmount,
+                `An amount of ${monthlyAmount} PKR has been deducted by System for the Beneficiary Expense on ${today} for the beneficiary named ${beneficiary.name} against Term Number: '${currentTerm + 1}'`
+            );
+
+            // Update the payment history
+            term.paymentHistory.push({
+                amountChange: monthlyAmount,
+                date: today
+            });
+
+            await beneficiary.save();
+
+            res.status(200).json({
+                msg: "Payment Done Successfully"
+            });
+        } else {
+            res.status(400).json({ error: "Invalid term or beneficiary status" });
+        }
+    } catch (error) {
+        console.error('Error in processing payment:', error);
+        res.status(500).json({ error: 'Error in Payment: ' + error });
+    }
+});
+
 
 module.exports = router;

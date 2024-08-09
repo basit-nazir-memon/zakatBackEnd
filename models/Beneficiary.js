@@ -6,6 +6,11 @@ const AmountTermsSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
 });
 
+const PaymentHistorySchema = new mongoose.Schema({
+    amountChange: { type: Number, required: true },
+    date: { type: Date, default: Date.now }
+});
+
 const TermSchema = new mongoose.Schema({
     status: {
         type: String,
@@ -18,6 +23,7 @@ const TermSchema = new mongoose.Schema({
         required: true
     },
     amountTerms: [AmountTermsSchema],
+    paymentHistory: [PaymentHistorySchema],
     closureReason: { type: String, default: '' },
     startDate: { type: Date, default: Date.now },
     endDate: { type: Date, default: null },
